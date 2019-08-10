@@ -6,11 +6,14 @@
 //        - Solution: USe one momentary button for X and one for Y. LED strip indicates if adustment is working or not.
 // DONE: HOW? To get Z-axis to be adjustable? Answer: Not posible at this time.
 // TODO: Use Z Axis and hand up-down motion to turn off an on lights?
-// TODO: Use Single tap for high fives to turn LED's white quickly and fade away.
+// DONE: Use Single tap for high fives to turn LED's white quickly and fade away.
 // TODO: Use Double Tap to cycle through LED patterns.
+// DONE: ADD LED ON when tap detection = 1;
+// DONE: ADD default brigthness when done with flash.
+// TODO: ADD way to turn off leds? Tripple Button press?
 /*************************************************************************/
 // Controller Inputs
-int debugMode = 0;
+int debugMode = 1;
 
 // Used to convert radians to degrees, set to 1/1 to keep output to radians
 int degreeToRadControl = PI / PI;
@@ -73,18 +76,21 @@ void fillAllLEDs(int hue)
 
 void fadeOut(int delay)
 {
-  if(debugMode) Serial.println("***Fade Out START ***");
+  if (debugMode)
+    Serial.println("***Fade Out START ***");
   for (int j = 254; j >= 0; j--)
   {
     FastLED.setBrightness(j);
     FastLED.delay(delay);
   }
-  if(debugMode) Serial.println("***Fade Out END ***");
+  if (debugMode)
+    Serial.println("***Fade Out END ***");
 }
 
 void flash(int cycles, int hue, int brightness, int speed)
 {
-  if(debugMode) Serial.println("***Color Flash START ***");
+  if (debugMode)
+    Serial.println("***Color Flash START ***");
 
   fillAllLEDs(hue);
   FastLED.show();
@@ -97,7 +103,8 @@ void flash(int cycles, int hue, int brightness, int speed)
     FastLED.show();
     delay(speed);
   }
-  if(debugMode) Serial.println("***Color Flash END ***");
+  if (debugMode)
+    Serial.println("***Color Flash END ***");
 }
 
 // Calculating radians and then converting to degrees with atan(param) * (180/PI);
@@ -121,7 +128,8 @@ double Z_angle(double Xg, double Yg, double Zg, int degreeControl)
 // Rainbow - https://github.com/Resseguie/FastLED-Patterns/blob/master/fastled-patterns.ino
 void rainbow(int cycles, int speed)
 {
-  if(debugMode) Serial.println("*** Rainbow START***");
+  if (debugMode)
+    Serial.println("*** Rainbow START***");
   if (cycles == 0)
   {
     for (int i = 0; i < NUM_LEDS; i++)
@@ -143,7 +151,8 @@ void rainbow(int cycles, int speed)
       FastLED.show();
       FastLED.delay(speed);
     }
-    if(debugMode) Serial.println("*** Rainbow END***");
+    if (debugMode)
+      Serial.println("*** Rainbow END***");
   }
 }
 
@@ -154,7 +163,8 @@ void whiteFlash(int flashLength, int fadeTime)
 {
   // fadeTime is in seconds and is multipled times 100 to workk with our step/delay of 10ms
   // example: fadeTime = 5, 5 * 100 = 500, 500 * 10ms delay  = 5000ms total time.
-  if(debugMode) Serial.println("*** White Flash START***");
+  if (debugMode)
+    Serial.println("*** White Flash START***");
   FastLED.setBrightness(255);
   for (int i = 0; i < NUM_LEDS; i++)
   {
@@ -165,14 +175,17 @@ void whiteFlash(int flashLength, int fadeTime)
   //  FastLED.delay(flashLength);
 
   fadeOut(10);
-  if(debugMode) Serial.println("*** White Flash END***");
-  FastLED.setBrightness(0);
+  FastLED.delay(1000);
+  FastLED.setBrightness(15);
+  if (debugMode)
+    Serial.println("*** White Flash END***");
 }
 
 // Bootup Loop
 void bootupLoop()
 {
-  if(debugMode) Serial.println("+Bootup Sequence");
+  if (debugMode)
+    Serial.println("+Bootup Sequence");
   for (int i = 0; i < NUM_LEDS; i++)
   {
     leds[i].setRGB(255, 255, 255);
@@ -210,9 +223,12 @@ void setup()
   Wire.write(Register_2D);
   Wire.write(8);
   Wire.endTransmission();
-  if(debugMode) Serial.println("Accelerometer Test ");
-  if(debugMode) Serial.print("Degree to Radian Control set to: ");
-  if(debugMode) Serial.println(degreeToRadControl);
+  if (debugMode)
+    Serial.println("Accelerometer Test ");
+  if (debugMode)
+    Serial.print("Degree to Radian Control set to: ");
+  if (debugMode)
+    Serial.println(degreeToRadControl);
 
   // -------------- TAP Detection Setup --------------
   adxl.powerOn(); // Power on the ADXL345
@@ -242,7 +258,7 @@ void setup()
   adxl.setDoubleTapWindow(255);  // 1.25 ms per increment
 
   // Set values for what is considered FREE FALL (0-255)
-  adxl.setFreeFallThreshold(7); // (5 - 9) recommended - 62.5mg per increment
+  adxl.setFreeFallThreshold(6); // (5 - 9) recommended - 62.5mg per increment
   adxl.setFreeFallDuration(30); // (20 - 70) recommended - 5ms per increment
 
   // Setting all interupts to take place on INT1 pin
@@ -329,7 +345,8 @@ void loop() // run over and over again
     // fill_solid(&(leds[i]), 10 /*number of leds*/, CHSV(224, 187, 255));
     FastLED.show();
     Serial.print("\tHue=");
-    if(debugMode) Serial.println(singleHUE);
+    if (debugMode)
+      Serial.println(singleHUE);
   }
   else if (digitalRead(YtogglePin) == HIGH && digitalRead(XtogglePin) != HIGH)
   {
@@ -343,78 +360,78 @@ void loop() // run over and over again
   {
     Serial.print("\tTAP DETECTION=");
     tapDetectionToggle = !tapDetectionToggle;
+    if (tapDetectionToggle == 1)
+    {
+      digitalWrite(LED_BUILTIN, HIGH);
+    }
+    else
+    {
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+
     Serial.print(tapDetectionToggle);
     delay(2000);
   }
-
-  // else
-  // {
-  // YadjustmentAllowed = 0;
-  // }
-
-  //  Serial.print("X-Allowed=");
-  //  Serial.print(XadjustmentAllowed);
-  //  Serial.print("\tY-Allowed=");
-  //  Serial.print(YadjustmentAllowed);
-  //  Serial.print("\tBrightness=");
-  //  Serial.print(BRIGHTNESS);
-  //  Serial.print("\tHue=");
-  //  if(debugMode) Serial.println(singleHUE);
 
   // -------------- TAP Detection Main Program --------------
   int x, y, z;
   adxl.readAccel(&x, &y, &z); // Read the accelerometer values and store them in variables declared above x,y,z
   byte interrupts = adxl.getInterruptSource();
 
-  // Free Fall Detection
-  if (adxl.triggered(interrupts, ADXL345_FREE_FALL))
-  {
-    if(debugMode) Serial.println("*** FREE FALL ***");
-    if(debugMode) Serial.println("*** Fire ??? ***");
-    // TODO: Cycle through colors when freefalling
-    // Tracer to End of Arms.
-    FastLED.setBrightness(0);
-    FastLED.delay(100);
-
-    for (int i = 2; i < NUM_LEDS - 1; i++)
-    {
-      leds[i - 2].setRGB(0, 0, 0);
-      leds[i - 1].setHue(100);
-      leds[i].setHue(175);
-      leds[i + 1].setHue(250);
-      Serial.print(i);
-      Serial.print(" ");
-      FastLED.setBrightness(150);
-      FastLED.show();
-      FastLED.delay(50);
-    }
-  }
-
-  // Inactivity
-  // if(adxl.triggered(interrupts, ADXL345_INACTIVITY)){
-  //   if(debugMode) Serial.println("*** INACTIVITY ***");
-  //    // TODO: Can I use this to fade out the LED's?
-  //   FastLED.setBrightness(25);
-  // }
-
-  // Activity
-  // if(adxl.triggered(interrupts, ADXL345_ACTIVITY)){
-  //   if(debugMode) Serial.println("*** ACTIVITY ***");
-  //    // TODO: Can I use this to fade in the LED's?
-  // }
-
   if (tapDetectionToggle)
   {
+    // Free Fall Detection
+    if (adxl.triggered(interrupts, ADXL345_FREE_FALL))
+    {
+      if (debugMode)
+        Serial.println("*** FREE FALL ***");
+      if (debugMode)
+        Serial.println("*** Fire ??? ***");
+      // TODO: Cycle through colors when freefalling
+      // Tracer to End of Arms.
+      FastLED.setBrightness(0);
+      FastLED.delay(100);
+      FastLED.setBrightness(150);
+
+      for (int i = 2; i < NUM_LEDS - 1; i++)
+      {
+        leds[i - 2].setRGB(0, 0, 0);
+        leds[i - 1].setHue(100);
+        leds[i].setHue(175);
+        leds[i + 1].setHue(250);
+        Serial.print(i);
+        Serial.print(" ");
+        // FastLED.setBrightness(150);
+        FastLED.show();
+        FastLED.delay(50);
+      }
+    }
+
+    // Inactivity
+    // if(adxl.triggered(interrupts, ADXL345_INACTIVITY)){
+    //   if(debugMode) Serial.println("*** INACTIVITY ***");
+    //    // TODO: Can I use this to fade out the LED's?
+    //   FastLED.setBrightness(25);
+    // }
+
+    // Activity
+    // if(adxl.triggered(interrupts, ADXL345_ACTIVITY)){
+    //   if(debugMode) Serial.println("*** ACTIVITY ***");
+    //    // TODO: Can I use this to fade in the LED's?
+    // }
+
 
     if (adxl.triggered(interrupts, ADXL345_DOUBLE_TAP))
     {
-      if(debugMode) Serial.println("*** DOUBLE TAP ***");
+      if (debugMode)
+        Serial.println("*** DOUBLE TAP ***");
       // TODO: USE This to Cycle Through LED patterns
       rainbow(5, 5);
     }
     else if (adxl.triggered(interrupts, ADXL345_SINGLE_TAP))
     {
-      if(debugMode) Serial.println("*** TAP ***");
+      if (debugMode)
+        Serial.println("*** TAP ***");
       whiteFlash(100, 5);
     }
   }
